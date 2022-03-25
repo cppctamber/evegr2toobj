@@ -74,7 +74,7 @@ VertexComponent vertexComponents_[] = {
 	{ "Tangent"            , -1, false, &convertDummy, 0, 0 },
 	{ "Binormal"           , -1, false, &convertDummy, 0, 0 },
 	{ "TextureCoordinates0", -1, false, &convertDummy, 0, 0 },
-	{ "TextureCoordinates1", -1, false, &convertDummy, 0, 0 }
+	{ "TextureCoordinates1", -1, false, &convertDummy, 0, 0 },
 };
 
 int nTriangleGroups_;
@@ -94,7 +94,6 @@ void getMeshInfo(const Mesh_t* mesh) {
 	triangleGroups_ = _GrannyGetMeshTriangleGroups(mesh);
 
 	StringMember_t* sm = mesh->PrimaryVertexData->Vertices_strings;
-
 
 	uint32_t currentOffset = 0;
 
@@ -140,14 +139,17 @@ void getMeshInfo(const Mesh_t* mesh) {
 
 void convertMeshToObj(const Mesh_t* mesh, FILE* file) {
 
-	fprintf(stderr, "# VertexCount: %d, BytesPerVertex: %d\n", nVertices_, bytesPerVertex_);
-	fprintf(stderr, "# IndexCount: %d, BytesPerIndex: %d\n", nIndices_, bytesPerIndex_);
+    fprintf(stderr, "# VertexCount: %d, BytesPerVertex: %d\n", nVertices_, bytesPerVertex_);
+	fprintf(stderr, "# IndexCount: %d, BytesPerIndex: %d\n\n", nIndices_, bytesPerIndex_);
 
-    printf("- Vertices: %d \n", vVertices_);
-    printf("- Faces:    %d \n", nTriangleGroups_);
+    fprintf(file, "# Converted by evegr2toobj.exe\n");
+    fprintf(file, "# VertexCount: %d\n", nVertices_);
+    fprintf(file, "# IndexCount: %d\n", nIndices_);
+	fprintf(file, "\no %s\n", mesh->Name);
 
+    printf("Vertex types found:\n");
 	if(vertexComponents_[0].exists) {
-		printf("-- Position found\n");
+		printf("-- Position\n");
 		for(int iVertex = 0; iVertex < nVertices_; ++iVertex) {
 			uint8_t* vertex = vertices_ + bytesPerVertex_ * iVertex + vertexComponents_[0].offset;
 			fprintf(file, "v %f %f %f\n",
@@ -159,7 +161,7 @@ void convertMeshToObj(const Mesh_t* mesh, FILE* file) {
 	}
 
 	if(vertexComponents_[1].exists) {
-	    printf("-- Normals found\n");
+	    printf("-- Normal\n");
 		for(int iVertex = 0; iVertex < nVertices_; ++iVertex) {
 			uint8_t* vertex = vertices_ + bytesPerVertex_ * iVertex + vertexComponents_[1].offset;
 			fprintf(file, "vn %f %f %f\n",
@@ -171,7 +173,7 @@ void convertMeshToObj(const Mesh_t* mesh, FILE* file) {
 	}
 
 	if(vertexComponents_[4].exists) {
-		printf("-- Texture coordinates 0 found\n");
+		printf("-- TexCoord0\n");
 		for(int iVertex = 0; iVertex < nVertices_; ++iVertex) {
 			uint8_t* vertex = vertices_ + bytesPerVertex_ * iVertex + vertexComponents_[4].offset;
 			fprintf(file, "vt %f %f\n",
@@ -180,6 +182,10 @@ void convertMeshToObj(const Mesh_t* mesh, FILE* file) {
 			);
 		}
 	}
+
+	if(vertexComponents_[5].exists) { printf("-- TexCoord1 (unsupported)\n"); }
+    if(vertexComponents_[2].exists) { printf("-- Tangent   (unsupported)\n");   }
+    if(vertexComponents_[3].exists) { printf("-- Binormal  (unsupported)\n");  }
 
 	granny_uint32 index0;
 	granny_uint32 index1;
@@ -229,7 +235,7 @@ int main(int argc, char** argv) {
 
 	granny_int32 result;
 
-	fprintf(stderr, "Granny Version: %s\n", _GrannyGetVersionString());
+	fprintf(stderr, "\nGranny Version: %s\n\n", _GrannyGetVersionString());
 	result = _GrannySetLogCallback(&logger);
 
 	GrannyFile_t* grannyFile = _GrannyReadEntireFile(argv[1]);
@@ -254,12 +260,8 @@ int main(int argc, char** argv) {
 	granny_int32 nModels = fileInfo->nModels;
 	granny_int32 nMeshes = fileInfo->nMeshes;
 
-	printf("%d\n", fileInfo);
-	printf("Models found: %d \n", nModels);
-	printf("Meshes found: %d \n", nMeshes);
-	printf("\n");
-
 	FILE* file = fopen(argv[2], "w");
+
 	for(int iMesh = 0; iMesh < nMeshes; ++iMesh) {
 		Mesh_t* mesh = fileInfo->Meshes[iMesh];
 		char* name = mesh->Name;
