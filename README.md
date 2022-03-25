@@ -1,4 +1,4 @@
-#.about
+# .about
 A command line tool for converting eve online gr2 files to the wavefront obj format.
 
 # .usage
