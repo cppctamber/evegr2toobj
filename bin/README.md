@@ -1,3 +1,5 @@
+# Readme from original author
+
 gr2 to obj converter
 
 unstuff the gr2 file and run evegr2toobj <src> <dst>
